@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package lanmessenger;
+
+// ------------------- 外层 envelope -------------------
+message Envelope {
+  string version = 1;         // 协议版本号，例如 "1.0.0"
+  string messageId = 2;       // 每条消息唯一ID，UUID
+  int64 timestamp = 3;        // UNIX时间戳毫秒
+
+  Sender sender = 4;          // 发送者信息
+  ChatScope scope = 5;        // 消息范围
+  PayloadType payloadType = 6;// 消息类型
+
+  // payload 可选，只会使用对应类型
+  TextPayload text = 7;
+  FileMeta fileMeta = 8;
+  FileChunk fileChunk = 9;
+}
+
+// ------------------- 发送者信息 -------------------
+message Sender {
+  string deviceId = 1;        // 设备ID（UUID）
+  string nickname = 2;        // 随机昵称
+  string avatarUrl = 3;       // 局域网路径或本地路径
+}
+
+// ------------------- 消息范围 -------------------
+message ChatScope {
+  ScopeType type = 1;
+  string targetId = 2;        // private: deviceId, group: groupId, broadcast: 空
+}
+
+enum ScopeType {
+  BROADCAST = 0;
+  PRIVATE = 1;
+  GROUP = 2;
+}
+
+// ------------------- 消息类型 -------------------
+enum PayloadType {
+  TEXT = 0;
+  FILE_META = 1;       // 文件信息
+  FILE_CHUNK = 2;      // 文件分片
+}
+
+// ------------------- 文本消息 -------------------
+message TextPayload {
+  string content = 1;
+}
+
+// ------------------- 文件信息 -------------------
+message FileMeta {
+  string fileId = 1;        // 文件唯一ID（UUID）
+  string fileName = 2;      // 文件名
+  int64 totalSize = 3;      // 总字节数
+  string mimeType = 4;      // MIME类型
+  int64 chunkSize = 5;      // 每片大小（byte），推荐 256KB～1MB
+}
+
+// ------------------- 文件分片 -------------------
+message FileChunk {
+  string fileId = 1;        // 对应 FileMeta 的 fileId
+  int64 chunkIndex = 2;     // 分片序号，从0开始
+  bytes data = 3;           // 分片二进制数据
+}
